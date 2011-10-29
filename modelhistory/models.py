@@ -1,6 +1,6 @@
 from django.db import models
 
-from django.utils.text import get_text_list
+from django.utils.text import get_text_list, capfirst
 from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.contenttypes.models import ContentType
@@ -16,6 +16,12 @@ def callback(sender, instance, created, **kwargs):
 
 class HistoryManager(models.Manager):
 
+    def _form_fields_filter(self, form):
+        # Rewrite this haskell code!
+        return [field for field in form.fields.items() \
+                if field[0] in form.changed_data and \
+                field[0] not in ['DELETE']]
+
     def _discover_action(self, obj):
         if getattr(obj._state, "created", None) and obj.pk:
             action = History.ADDITION
@@ -26,6 +32,12 @@ class HistoryManager(models.Manager):
                 action = History.DELETION
 
         return action
+
+    def _get_form_field_value(self, form, field_name):
+        try:
+            return getattr(form.instance, "get_%s_display" % field_name)()
+        except AttributeError:
+            return getattr(form.instance, field_name)
 
     def log(self, message):
         return History.objects.create(message=message)
@@ -42,21 +54,30 @@ class HistoryManager(models.Manager):
 
         action = self._discover_action(obj)
 
-        if action == History.CHANGE:
+        if action == History.DELETION:
+            message = ""
+
+        elif action == History.ADDITION:
             message_parts = []
 
-            for field_name in filter(lambda x: x is not "DELETE", form.changed_data):
-                try:
-                    value = getattr(form.instance, "get_%s_display" % field_name)()
-                except AttributeError:
-                    value = getattr(form.instance, field_name)
+            for field_name, field in self._form_fields_filter(form):
+                message_parts.append(
+                    "%s set to '%s'" %
+                    (field.label, self._get_form_field_value(form, field_name))
+                )
 
-                message_parts.append("%s to '%s'" %
-                                     (field_name, value))
+            message = "%s." % get_text_list(message_parts, "and")
 
-            message = "changed %s" % get_text_list(message_parts, "and")
-        else:
-            message = ""
+        elif action == History.CHANGE:
+            message_parts = []
+
+            for field_name, field in self._form_fields_filter(form):
+                message_parts.append(
+                    "%s changed to '%s'" %
+                    (field.label, self._get_form_field_value(form, field_name))
+                )
+
+            message = "%s." % get_text_list(message_parts, "and")
 
         return History.objects.create(content_object=obj,
                                       message=message,
@@ -88,15 +109,36 @@ class History(models.Model):
     CHANGE = 2
     DELETION = 3
 
+    objects = HistoryManager()
+
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.PositiveIntegerField(null=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
 
     time = models.DateTimeField(_('time'), auto_now=True)
-    message = models.TextField(_('change message'), blank=True)
     action = models.PositiveSmallIntegerField(_('action flag'), null=True)
+    _message = models.TextField(_('change message'), blank=True)
 
-    objects = HistoryManager()
+    def get_message(self):
+        message_parts = []
+        if self.action == History.ADDITION:
+            message_parts.append("%s created"
+                                 % unicode(self.content_object))
+
+        elif self.action == History.CHANGE:
+            message_parts.append("%s changed"
+                                 % unicode(self.content_object))
+
+        message_parts.append(self._message)
+
+        message_parts = [capfirst(message) for message in message_parts]
+
+        return ". ".join(message_parts)
+
+    def set_message(self, message):
+        self._message = message
+
+    message = property(get_message, set_message)
 
     def __repr__(self):
         return "<History: %s:%s:%s>" % (self.content_object,
@@ -105,4 +147,4 @@ class History(models.Model):
 
 
 
-
+# Object #created. Name set to test.
