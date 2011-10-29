@@ -9,13 +9,13 @@ from .forms import SimpleModelForm
 
 class TestObjectLogs(TestCase):
 
-    def test_message(self):
-        message = "message"
-        obj = SimpleModel.objects.create(name="test")
+    # def test_message(self):
+    #     message = "message"
+    #     obj = SimpleModel.objects.create(name="test")
 
-        history_log = History.objects.log_object(obj, message)
+    #     history_log = History.objects.log_object(obj, message)
 
-        self.assertEqual(history_log.message, message)
+    #     self.assertEqual(history_log.message, message)
 
 
     def test_create(self):
@@ -233,3 +233,38 @@ class TestInlineFormSetLogs(TestCase):
         self.assertEqual(history_log[0].content_object, obj)
         self.assertTrue(all([element.action == History.DELETION for element in history_log[1:]]))
 
+
+class TestFormLogsMessage(TestCase):
+
+    def setUp(self):
+        pass
+
+    def test_create(self):
+        form = SimpleModelForm({"name": "test",
+                                "real_name": "test"})
+
+        self.assertTrue(form.is_valid())
+        form.save()
+
+        log = History.objects.log_form(form)
+
+        parts = ["%s created" % unicode(form.instance).capitalize(),
+                 "Name set to 'test' and Real name set to 'test'."]
+
+        self.assertEqual(". ".join(parts), log.message)
+
+
+    def test_update(self):
+        obj = SimpleModel.objects.create(name="test")
+        form = SimpleModelForm({"name": "test2",
+                                "real_name": "test2"}, instance=obj)
+
+        self.assertTrue(form.is_valid())
+        form.save()
+
+        log = History.objects.log_form(form)
+
+        parts = ["%s changed" % unicode(form.instance).capitalize(),
+                 "Name changed to 'test2' and Real name changed to 'test2'."]
+
+        self.assertEqual(". ".join(parts), log.message)

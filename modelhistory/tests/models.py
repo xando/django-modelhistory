@@ -3,6 +3,7 @@ from django.db import models
 
 class SimpleModel(models.Model):
     name = models.CharField(max_length=100)
+    real_name = models.CharField(max_length=100, blank=True)
 
     def __unicode__(self):
         return "%s %s" % (self._meta.verbose_name, self.pk)
