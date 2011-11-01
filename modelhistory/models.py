@@ -148,6 +148,3 @@ class History(models.Model):
                                         self.action,
                                         self.message)
 
-
-
-# Object #created. Name set to test.
