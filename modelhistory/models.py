@@ -128,6 +128,7 @@ class History(models.Model):
     CHANGE = 2
     DELETION = 3
 
+    objects = models.Manager()
     log = HistoryManager()
 
     content_type = models.ForeignKey(ContentType, null=True)
