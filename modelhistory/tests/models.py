@@ -2,7 +2,7 @@ from django.db import models
 
 
 class SimpleModel(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, blank=True)
     real_name = models.CharField(max_length=100, blank=True)
 
     def __unicode__(self):

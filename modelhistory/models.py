@@ -54,11 +54,9 @@ class HistoryManager(models.Manager):
 
         action = self._discover_action(obj)
 
-        if action == History.DELETION:
-            message = ""
+        message_parts = []
 
-        elif action == History.ADDITION:
-            message_parts = []
+        if action == History.ADDITION:
 
             for field_name, field in self._form_fields_filter(form):
                 message_parts.append(
@@ -66,10 +64,7 @@ class HistoryManager(models.Manager):
                     (field.label, self._get_form_field_value(form, field_name))
                 )
 
-            message = "%s." % get_text_list(message_parts, "and")
-
         elif action == History.CHANGE:
-            message_parts = []
 
             for field_name, field in self._form_fields_filter(form):
                 message_parts.append(
@@ -77,7 +72,10 @@ class HistoryManager(models.Manager):
                     (field.label, self._get_form_field_value(form, field_name))
                 )
 
+        if message_parts:
             message = "%s." % get_text_list(message_parts, "and")
+        else:
+            message = ""
 
         return History.objects.create(content_object=obj,
                                       message=message,
@@ -129,11 +127,16 @@ class History(models.Model):
             message_parts.append("%s changed"
                                  % unicode(self.content_object))
 
-        message_parts.append(self._message)
+        if self._message:
+            message_parts.append(self._message or None)
 
         message_parts = [capfirst(message) for message in message_parts]
 
-        return ". ".join(message_parts)
+        if len(message_parts) > 1:
+            return ". ".join(message_parts)
+        elif len(message_parts) == 1:
+            return "%s." % message_parts[0]
+        return ""
 
     def set_message(self, message):
         self._message = message

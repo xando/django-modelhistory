@@ -253,6 +253,16 @@ class TestFormLogsMessage(TestCase):
 
         self.assertEqual(". ".join(parts), log.message)
 
+    def test_create_emptymessage(self):
+        form = SimpleModelForm({})
+
+        self.assertTrue(form.is_valid())
+        form.save()
+
+        log = History.objects.log_form(form)
+
+        message = "%s created." % unicode(form.instance).capitalize()
+        self.assertEqual(message, log.message)
 
     def test_update(self):
         obj = SimpleModel.objects.create(name="test")
