@@ -86,7 +86,7 @@ History.log(obj)
 ```
 
 ## Tests:
-Tests are [here](https://github.com/xando/django-modelhistory/modelhistory/tests/).
+Tests are [here](https://github.com/xando/django-modelhistory/tree/master/modelhistory/tests).
 
 ```sh
 ./runtests.py
