@@ -119,23 +119,27 @@ class History(models.Model):
 
     def get_message(self):
         message_parts = []
+
         if self.action == History.ADDITION:
-            message_parts.append("%s created"
-                                 % unicode(self.content_object))
+            message_parts.append(_(u"%(object)s created") % {
+                "object": self.content_object
+            })
 
         elif self.action == History.CHANGE:
-            message_parts.append("%s changed"
-                                 % unicode(self.content_object))
+            message_parts.append(_(u"%(object)s changed") % {
+                "object": self.content_object
+            })
 
         if self._message:
             message_parts.append(self._message or None)
 
         message_parts = [capfirst(message) for message in message_parts]
 
+
         if len(message_parts) > 1:
-            return ". ".join(message_parts)
+            return u". ".join(message_parts)
         elif len(message_parts) == 1:
-            return "%s." % message_parts[0]
+            return u"%s." % message_parts[0]
         return ""
 
     def set_message(self, message):

@@ -6,7 +6,7 @@ class SimpleModel(models.Model):
     real_name = models.CharField(max_length=100, blank=True)
 
     def __unicode__(self):
-        return "%s %s" % (self._meta.verbose_name, self.pk)
+        return u"%s %s" % (self._meta.verbose_name, self.pk)
 
 
 class ChoiceModel(models.Model):
@@ -16,7 +16,7 @@ class ChoiceModel(models.Model):
                ("value_2", "Verbose value 2"))
     choice = models.CharField(choices=choices, max_length=100)
     def __unicode__(self):
-        return "%s %s" % (self._meta.verbose_name, self.pk)
+        return u"%s %s" % (self._meta.verbose_name, self.pk)
 
 
 class ReleatedModel(models.Model):
@@ -24,4 +24,4 @@ class ReleatedModel(models.Model):
     choice = models.ForeignKey('SimpleModel')
 
     def __unicode__(self):
-        return "%s %s" % (self._meta.verbose_name, self.pk)
+        return u"%s %s" % (self._meta.verbose_name, self.pk)

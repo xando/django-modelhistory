@@ -248,10 +248,10 @@ class TestFormLogsMessage(TestCase):
 
         log = History.objects.log_form(form)
 
-        parts = ["%s created" % unicode(form.instance).capitalize(),
-                 "Name set to 'test' and Real name set to 'test'."]
+        parts = [u"%s created" % unicode(form.instance).capitalize(),
+                 u"Name set to 'test' and Real name set to 'test'."]
 
-        self.assertEqual(". ".join(parts), log.message)
+        self.assertEqual(u". ".join(parts), log.message)
 
     def test_create_emptymessage(self):
         form = SimpleModelForm({})
