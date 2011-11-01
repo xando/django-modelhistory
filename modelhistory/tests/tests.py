@@ -248,21 +248,7 @@ class TestFormLogsMessage(TestCase):
 
         log = History.objects.log_form(form)
 
-        parts = [u"%s created" % unicode(form.instance).capitalize(),
-                 u"Name set to 'test' and Real name set to 'test'."]
-
-        self.assertEqual(u". ".join(parts), log.message)
-
-    def test_create_emptymessage(self):
-        form = SimpleModelForm({})
-
-        self.assertTrue(form.is_valid())
-        form.save()
-
-        log = History.objects.log_form(form)
-
-        message = "%s created." % unicode(form.instance).capitalize()
-        self.assertEqual(message, log.message)
+        self.assertEqual(u"Name set to 'test' and Real name set to 'test'.", log.message)
 
     def test_update(self):
         obj = SimpleModel.objects.create(name="test")
@@ -274,7 +260,4 @@ class TestFormLogsMessage(TestCase):
 
         log = History.objects.log_form(form)
 
-        parts = ["%s changed" % unicode(form.instance).capitalize(),
-                 "Name changed to 'test2' and Real name changed to 'test2'."]
-
-        self.assertEqual(". ".join(parts), log.message)
+        self.assertEqual(u"Name changed to 'test2' and Real name changed to 'test2'.", log.message)

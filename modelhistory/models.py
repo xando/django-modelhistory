@@ -118,29 +118,7 @@ class History(models.Model):
     _message = models.TextField(_('change message'), blank=True)
 
     def get_message(self):
-        message_parts = []
-
-        if self.action == History.ADDITION:
-            message_parts.append(_(u"%(object)s created") % {
-                "object": self.content_object
-            })
-
-        elif self.action == History.CHANGE:
-            message_parts.append(_(u"%(object)s changed") % {
-                "object": self.content_object
-            })
-
-        if self._message:
-            message_parts.append(self._message or None)
-
-        message_parts = [capfirst(message) for message in message_parts]
-
-
-        if len(message_parts) > 1:
-            return u". ".join(message_parts)
-        elif len(message_parts) == 1:
-            return u"%s." % message_parts[0]
-        return ""
+        return self._message
 
     def set_message(self, message):
         self._message = message
