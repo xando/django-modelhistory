@@ -10,7 +10,6 @@ from .forms import SimpleModelForm
 class TestObjectLogs(TestCase):
 
     def test_message(self):
-        import ipdb; ipdb.set_trace()
         message = "message"
         obj = SimpleModel.objects.create(name="test")
 
