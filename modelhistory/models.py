@@ -1,4 +1,6 @@
 from django.db import models
+from django import forms
+
 
 from django.utils.text import get_text_list, capfirst
 from django.utils.encoding import force_unicode
@@ -15,6 +17,25 @@ def callback(sender, instance, created, **kwargs):
 
 
 class HistoryManager(models.Manager):
+
+    def __call__(self, obj, *args, **kwargs):
+
+        if isinstance(obj, forms.models.BaseInlineFormSet):
+            return self.inlineformset(obj, *args, **kwargs)
+
+        if isinstance(obj, forms.models.BaseModelFormSet):
+            return self.formset(obj, *args, **kwargs)
+
+        if isinstance(obj, forms.ModelForm):
+            return self.form(obj, *args, **kwargs)
+
+        if isinstance(obj, models.Model):
+            return self.obj(obj, *args, **kwargs)
+
+        if isinstance(obj, basestring):
+            return self.log(obj, *args, **kwargs)
+
+        raise TypeError("History for type %s is unsupported." % type(obj))
 
     def _form_fields_filter(self, form):
         # Rewrite this haskell code!
@@ -42,14 +63,14 @@ class HistoryManager(models.Manager):
     def log(self, message):
         return History.objects.create(message=message)
 
-    def log_object(self, obj, message=""):
+    def obj(self, obj, message=""):
         action = self._discover_action(obj)
 
         return History.objects.create(content_object=obj,
                                       message=message,
                                       action=action)
 
-    def log_form(self, form):
+    def form(self, form):
         obj = form.instance
 
         action = self._discover_action(obj)
@@ -81,15 +102,15 @@ class HistoryManager(models.Manager):
                                       message=message,
                                       action=action)
 
-    def log_formset(self, formset):
+    def formset(self, formset):
         history_objects = []
         for form in formset.forms:
-            history_objects.append(self.log_form(form))
+            history_objects.append(self.form(form))
 
         return history_objects
 
-    def log_inlineformset(self, inlineformset):
-        history_objects = self.log_formset(inlineformset)
+    def inlineformset(self, inlineformset):
+        history_objects = self.formset(inlineformset)
         message_parts = [element.message for element in history_objects]
         if any(message_parts):
             message = unicode(get_text_list(message_parts, last_word=_(u'and')))
@@ -97,7 +118,7 @@ class HistoryManager(models.Manager):
             message = ""
 
         obj = inlineformset.instance
-        history_objects.insert(0, self.log_object(obj, message))
+        history_objects.insert(0, self.obj(obj, message))
 
         return history_objects
 
@@ -107,7 +128,7 @@ class History(models.Model):
     CHANGE = 2
     DELETION = 3
 
-    objects = HistoryManager()
+    log = HistoryManager()
 
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.PositiveIntegerField(null=True)

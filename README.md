@@ -3,14 +3,25 @@
 
 
 ## Description:
-Simple model logging helper for django projects. Covers functionality of discovering action taken on object: DELETE, UPDATE, CREATE and creates and saves suitable message to database. Supports simple db.models.Models objects as well as forms, formset and inlineformset based on Django ORM Models 
+Simple model logging helper for django projects. Covers functionality of discovering action taken on object: DELETE, UPDATE, CREATE and creates and saves suitable message to database. Supports simple db.models.Models objects as well as forms, formset and inlineformset based on Django ORM Models
 
 ## Status:
-This application is pretty much in alpha stage, so be careful :) 
+This application is pretty much in alpha stage, so be careful :)
 
-## How to use it?:
+## Installation:
 
-First you have to add modelhistory do your INSTALLED_APPS inside **settings.py**.
+```bash
+pip install django-modelhistory
+```
+or
+
+```bash
+easy_install django-modelhistory
+```
+
+## Configuration:
+
+First you have to add modelhistory do your INSTALLED_APPS inside **settings.py**:
 
 ```python
 INSTALLED_APPS = (
@@ -19,46 +30,63 @@ INSTALLED_APPS = (
 )
 ```
 
+and to create tables for history records run:
+
+```bash
+python manage.py syncdb
+```
+
 Everywhere where you want to use History you have to place this import.
 
 ```python
 from django_history.models import History
 ```
 
+## Usage:
 
 ### objects
+
 ```python
 obj = SimpleModel.objects.create(name="So cool name")
-History.objects.log_object(obj)
+History.log.obj(obj)
 ```
 
 ### forms (model forms)
 ```python
 form = SimpleModelForm(request.POST)
-if form.is_valid():
-    form.save()
-    history_log = History.objects.log_form(form)
+...
+form.save()
+log = History.log.form(form)
 ```
 
 ### formsets (model formsets)
 ```python
 formset = ModelFormSet(request.POST)
-if formset.is_valid():
-    formset.save()
-    history_log = History.objects.log_formset(formset)
+...
+formset.save()
+log = History.log.formset(formset)
 ```
 
 ### inline formsets (inline model formsets)
 ```python
 obj = SimpleModel.objects.create(name="So cool name")
 formset = ModelInlineFormSet(request.POST, instance=obj)
-if formset.is_valid():
-    formset.save()
-    history_log = History.objects.log_inlineformset(formset)
+...
+formset.save()
+log = History.log.inlineformset(formset)
+```
+
+### implicite usage
+
+Just create an object, form or formset. Do what to you whant to do with it and pass 
+
+``````python
+History.log(obj)
+# where object could be an instance of model, form or formset.
 ```
 
 ## Tests:
-Tests are [here](https://github.com/xando/django-modelhistory/modelhistory/tests/). 
+Tests are [here](https://github.com/xando/django-modelhistory/modelhistory/tests/).
 
 ```sh
 ./runtests.py

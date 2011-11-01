@@ -9,21 +9,26 @@ from .forms import SimpleModelForm
 
 class TestObjectLogs(TestCase):
 
-    # def test_message(self):
-    #     message = "message"
-    #     obj = SimpleModel.objects.create(name="test")
+    def test_message(self):
+        import ipdb; ipdb.set_trace()
+        message = "message"
+        obj = SimpleModel.objects.create(name="test")
 
-    #     history_log = History.objects.log_object(obj, message)
+        log = History.log.obj(obj, message)
+        self.assertEqual(log.message, message)
 
-    #     self.assertEqual(history_log.message, message)
+        log = History.log(obj, message)
+        self.assertEqual(log.message, message)
 
 
     def test_create(self):
         obj = SimpleModel.objects.create(name="test")
 
-        history_log = History.objects.log_object(obj)
+        log = History.log.obj(obj)
+        self.assertEqual(log.action, History.ADDITION)
 
-        self.assertEqual(history_log.action, History.ADDITION)
+        log = History.log(obj)
+        self.assertEqual(log.action, History.ADDITION)
 
 
     def test_update(self):
@@ -32,18 +37,18 @@ class TestObjectLogs(TestCase):
         obj.name = "test2"
         obj.save()
 
-        history_log = History.objects.log_object(obj)
+        log = History.log.obj(obj)
 
-        self.assertEqual(history_log.action, History.CHANGE)
+        self.assertEqual(log.action, History.CHANGE)
 
 
     def test_delete(self):
         obj = SimpleModel.objects.create(name="test")
         obj.delete()
 
-        history_log = History.objects.log_object(obj)
+        log = History.log.obj(obj)
 
-        self.assertEqual(history_log.action, History.DELETION)
+        self.assertEqual(log.action, History.DELETION)
 
 
 class TestFormLogs(TestCase):
@@ -54,8 +59,11 @@ class TestFormLogs(TestCase):
         self.assertTrue(form.is_valid())
         form.save()
 
-        history_log = History.objects.log_form(form)
-        self.assertEqual(history_log.action, History.ADDITION)
+        log = History.log.form(form)
+        self.assertEqual(log.action, History.ADDITION)
+
+        log = History.log(form)
+        self.assertEqual(log.action, History.ADDITION)
 
     def test_update(self):
         obj = SimpleModel.objects.create(name="test")
@@ -64,8 +72,8 @@ class TestFormLogs(TestCase):
         self.assertTrue(form.is_valid())
         form.save()
 
-        history_log = History.objects.log_form(form)
-        self.assertEqual(history_log.action, History.CHANGE)
+        log = History.log.form(form)
+        self.assertEqual(log.action, History.CHANGE)
 
 
 class TestFormSetLogs(TestCase):
@@ -85,10 +93,15 @@ class TestFormSetLogs(TestCase):
         self.assertTrue(formset.is_valid())
         formset.save()
 
-        history_log = History.objects.log_formset(formset)
+        log = History.log.formset(formset)
 
-        self.assertEqual(len(history_log), 2)
-        self.assertTrue(all([element.action == History.ADDITION for element in history_log]))
+        self.assertEqual(len(log), 2)
+        self.assertTrue(all([element.action == History.ADDITION for element in log]))
+
+        log = History.log(formset)
+
+        self.assertEqual(len(log), 2)
+        self.assertTrue(all([element.action == History.ADDITION for element in log]))
 
     def test_update(self):
         SimpleModelFormSet = modelformset_factory(SimpleModel,
@@ -111,10 +124,10 @@ class TestFormSetLogs(TestCase):
         self.assertTrue(formset.is_valid())
         formset.save()
 
-        history_log = History.objects.log_formset(formset)
+        log = History.log.formset(formset)
 
-        self.assertEqual(len(history_log), 2)
-        self.assertTrue(all([element.action == History.CHANGE for element in history_log]))
+        self.assertEqual(len(log), 2)
+        self.assertTrue(all([element.action == History.CHANGE for element in log]))
 
     def test_delete(self):
         SimpleModelFormSet = modelformset_factory(SimpleModel,
@@ -140,10 +153,10 @@ class TestFormSetLogs(TestCase):
         self.assertTrue(formset.is_valid())
         formset.save()
 
-        history_log = History.objects.log_formset(formset)
+        log = History.log.formset(formset)
 
-        self.assertEqual(len(history_log), 2)
-        self.assertTrue(all([element.action == History.DELETION for element in history_log]))
+        self.assertEqual(len(log), 2)
+        self.assertTrue(all([element.action == History.DELETION for element in log]))
 
 
 class TestInlineFormSetLogs(TestCase):
@@ -167,11 +180,18 @@ class TestInlineFormSetLogs(TestCase):
         self.assertTrue(formset.is_valid())
         formset.save()
 
-        history_log = History.objects.log_inlineformset(formset)
+        log = History.log.inlineformset(formset)
 
-        self.assertEqual(len(history_log), 3)
-        self.assertEqual(history_log[0].content_object, obj)
-        self.assertTrue(all([element.action == History.ADDITION for element in history_log[1:]]))
+        self.assertEqual(len(log), 3)
+        self.assertEqual(log[0].content_object, obj)
+        self.assertTrue(all([element.action == History.ADDITION for element in log[1:]]))
+
+        log = History.log(formset)
+
+        self.assertEqual(len(log), 3)
+        self.assertEqual(log[0].content_object, obj)
+        self.assertTrue(all([element.action == History.ADDITION for element in log[1:]]))
+
 
     def test_edit(self):
         ReleatedModelFormSet = inlineformset_factory(SimpleModel,
@@ -196,11 +216,11 @@ class TestInlineFormSetLogs(TestCase):
         self.assertTrue(formset.is_valid())
         formset.save()
 
-        history_log = History.objects.log_inlineformset(formset)
+        log = History.log.inlineformset(formset)
 
-        self.assertEqual(len(history_log), 3)
-        self.assertEqual(history_log[0].content_object, obj)
-        self.assertTrue(all([element.action == History.CHANGE for element in history_log[1:]]))
+        self.assertEqual(len(log), 3)
+        self.assertEqual(log[0].content_object, obj)
+        self.assertTrue(all([element.action == History.CHANGE for element in log[1:]]))
 
     def test_delete(self):
         ReleatedModelFormSet = inlineformset_factory(SimpleModel,
@@ -227,11 +247,11 @@ class TestInlineFormSetLogs(TestCase):
         self.assertTrue(formset.is_valid())
         formset.save()
 
-        history_log = History.objects.log_inlineformset(formset)
+        log = History.log.inlineformset(formset)
 
-        self.assertEqual(len(history_log), 3)
-        self.assertEqual(history_log[0].content_object, obj)
-        self.assertTrue(all([element.action == History.DELETION for element in history_log[1:]]))
+        self.assertEqual(len(log), 3)
+        self.assertEqual(log[0].content_object, obj)
+        self.assertTrue(all([element.action == History.DELETION for element in log[1:]]))
 
 
 class TestFormLogsMessage(TestCase):
@@ -246,7 +266,7 @@ class TestFormLogsMessage(TestCase):
         self.assertTrue(form.is_valid())
         form.save()
 
-        log = History.objects.log_form(form)
+        log = History.log.form(form)
 
         self.assertEqual(u"Name set to 'test' and Real name set to 'test'.", log.message)
 
@@ -258,6 +278,8 @@ class TestFormLogsMessage(TestCase):
         self.assertTrue(form.is_valid())
         form.save()
 
-        log = History.objects.log_form(form)
+        log = History.log.form(form)
 
         self.assertEqual(u"Name changed to 'test2' and Real name changed to 'test2'.", log.message)
+
+
