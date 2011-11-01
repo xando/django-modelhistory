@@ -2,7 +2,7 @@ from django.db import models
 
 from django.utils.text import get_text_list, capfirst
 from django.utils.encoding import force_unicode
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext_lazy as _, ugettext
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.db.models.signals import post_save
@@ -59,21 +59,21 @@ class HistoryManager(models.Manager):
         if action == History.ADDITION:
 
             for field_name, field in self._form_fields_filter(form):
-                message_parts.append(
-                    "%s set to '%s'" %
-                    (field.label, self._get_form_field_value(form, field_name))
-                )
+                message_parts.append(_("%(attribute)s set to '%(value)s'") % {
+                    "attribute": field.label,
+                    "value": self._get_form_field_value(form, field_name)
+                })
 
         elif action == History.CHANGE:
 
             for field_name, field in self._form_fields_filter(form):
-                message_parts.append(
-                    "%s changed to '%s'" %
-                    (field.label, self._get_form_field_value(form, field_name))
-                )
+                message_parts.append(_("%(attribute)s changed to '%(value)s'") % {
+                    "attribute": field.label,
+                    "value": self._get_form_field_value(form, field_name)
+                })
 
         if message_parts:
-            message = "%s." % get_text_list(message_parts, "and")
+            message = u"%s." % get_text_list(message_parts, _(u"and"))
         else:
             message = ""
 
@@ -92,7 +92,7 @@ class HistoryManager(models.Manager):
         history_objects = self.log_formset(inlineformset)
         message_parts = [element.message for element in history_objects]
         if any(message_parts):
-            message = get_text_list(message_parts, "and")
+            message = unicode(get_text_list(message_parts, last_word=_(u'and')))
         else:
             message = ""
 
